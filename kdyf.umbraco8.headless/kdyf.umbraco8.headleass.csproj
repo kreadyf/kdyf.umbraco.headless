@@ -7,8 +7,8 @@
     <ProjectGuid>{29629039-9E7E-4B51-BC33-DE2B720C690F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>kdyf.umbraco8.headleass</RootNamespace>
-    <AssemblyName>kdyf.umbraco8.headleass</AssemblyName>
+    <RootNamespace>kdyf.umbraco8.headless</RootNamespace>
+    <AssemblyName>kdyf.umbraco8.headless</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
