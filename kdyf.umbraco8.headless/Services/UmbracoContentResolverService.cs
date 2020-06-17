@@ -63,13 +63,15 @@ namespace kdyf.umbraco8.headless.Services
 
         private dynamic Resolve(IPublishedElement content, string[] aliases)
         {
-            var res = content.Properties
+            if (content == null)
+                return _umbContext.Content.GetAtRoot().Select(s => DynamicObject.Merge(_metaPropertyResolverService.Resolve(s), Resolve(s, null)));
+
+            return content.Properties
                 .Where(s => aliases == null || aliases.Contains(s.PropertyType.Alias, propertyNameComparer))
                 .ToDictionary(
                     k => k.PropertyType.Alias,
-                    v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias));
-
-            return res.ToDynamicObject();
+                    v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias))
+                .ToDynamicObject();
         }
 
         private dynamic Resolve(IPublishedContent content)

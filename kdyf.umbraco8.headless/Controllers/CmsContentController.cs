@@ -57,11 +57,9 @@ namespace kdyf.umbraco8.headless.Controllers
         [System.Web.Http.HttpGet]
         public Task<IHttpActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
         {
+            var content = string.IsNullOrEmpty(url) ? null : _context.Content.GetByRoute($"/{url}");
 
-
-            var content = _context.Content.GetByRoute($"/{url}");
-
-            if (content == null)
+            if (!string.IsNullOrEmpty(url) && content == null)
                 return Task.FromResult(NotFound() as IHttpActionResult);
 
             string[] includeInMetaParam = string.IsNullOrWhiteSpace(includeInMeta) ? new string[] { } : includeInMeta.Split(',');
