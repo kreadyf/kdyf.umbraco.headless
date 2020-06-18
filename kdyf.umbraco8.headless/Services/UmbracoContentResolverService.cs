@@ -47,16 +47,13 @@ namespace kdyf.umbraco8.headless.Services
 
         public dynamic Resolve(IPublishedContent content, string [] aliases)
         {
-            if (content == null)
-                return _umbContext.Content.GetAtRoot().Select(s => DynamicObject.Merge(_metaPropertyResolverService.Resolve(s), Resolve(s, null)));
-
             var res = content.Properties
                 .Where(s => aliases == null || aliases.Contains(s.PropertyType.Alias, propertyNameComparer))
                 .ToDictionary(
                     k => k.PropertyType.Alias,
                     v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias));
 
-            // @carlos add all culture urls (test it)
+            // @ carlos add all culture urls (test it)
             var allCultures = content.Cultures.Keys;
             if ( allCultures.Count() > 1 && !string.IsNullOrEmpty(allCultures.FirstOrDefault()) )
                 res.Add("Languages", allCultures.ToDictionary(k=>k, v=>content.Url(v)));

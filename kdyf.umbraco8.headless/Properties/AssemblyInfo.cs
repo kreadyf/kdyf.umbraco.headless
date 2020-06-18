@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("kdyf.umbraco8.headless")]
-[assembly: AssemblyDescription("Use the Umbraco CMS v8 without any templates, this library offers a REST service which returns content as JSON.")]
+[assembly: AssemblyDescription("Use the Umbraco CMS v8 without any templates: This library injects a API-REST service which returns content as JSON.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("kreadyf S.R.L.")]
+[assembly: AssemblyCompany("www.kreadyf.com")]
 [assembly: AssemblyProduct("")]
 [assembly: AssemblyCopyright("Copyright © 2020")]
 [assembly: AssemblyTrademark("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.8.2.0")]
-[assembly: AssemblyFileVersion("0.8.2.0")]
+[assembly: AssemblyVersion("0.8.3.0")]
+[assembly: AssemblyFileVersion("0.8.3.0")]
