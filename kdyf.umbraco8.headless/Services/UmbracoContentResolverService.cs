@@ -53,7 +53,6 @@ namespace kdyf.umbraco8.headless.Services
                     k => k.PropertyType.Alias,
                     v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias));
 
-            // @ carlos add all culture urls (test it)
             var allCultures = content.Cultures.Keys;
             if ( allCultures.Count() > 1 && !string.IsNullOrEmpty(allCultures.FirstOrDefault()) )
                 res.Add("Languages", allCultures.ToDictionary(k=>k, v=>content.Url(v)));

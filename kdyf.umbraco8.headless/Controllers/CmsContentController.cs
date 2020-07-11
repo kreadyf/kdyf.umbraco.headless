@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,10 +8,12 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Http.Description;
 using System.Web.Mvc;
+using HtmlAgilityPack;
 using kdyf.umbraco8.headless.Extensions;
 using kdyf.umbraco8.headless.Interfaces;
 using kdyf.umbraco8.headless.Models;
 using kdyf.umbraco8.headless.Services;
+using Umbraco.Core;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 using Umbraco.Web.WebApi;
@@ -18,7 +21,7 @@ using File = System.IO.File;
 using Task = System.Threading.Tasks.Task;
 using umbracoWeb = Umbraco.Web;
 
-    
+
 
 namespace kdyf.umbraco8.headless.Controllers
 {
@@ -30,19 +33,22 @@ namespace kdyf.umbraco8.headless.Controllers
         private readonly INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> _navigationTreeResolverService;
 
         private readonly UmbracoContext _context;
+        private readonly IVariationContextAccessor _variationContextAccessor;
 
 
         public CmsContentController(
             IContentResolverService<IPublishedContent> contentResolverService,
             IMetaPropertyResolverService<IPublishedContent> metaPropertyResolverService,
             INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> navigationTreeResolverService,
-            UmbracoContext context
+            UmbracoContext context,
+            IVariationContextAccessor variationContextAccessor
             )
         {
             _metaPropertyResolverService = metaPropertyResolverService;
             _contentResolverService = contentResolverService;
             _navigationTreeResolverService = navigationTreeResolverService;
             _context = context;
+            _variationContextAccessor = variationContextAccessor;
         }
 
 
@@ -57,9 +63,7 @@ namespace kdyf.umbraco8.headless.Controllers
         [System.Web.Http.HttpGet]
         public Task<IHttpActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
         {
-
-
-            var content = _context.Content.GetByRoute($"/{url}");
+            var content = GetByRouteAndCulture($"/{url}");
 
             if (content == null)
                 return Task.FromResult(NotFound() as IHttpActionResult);
@@ -75,6 +79,47 @@ namespace kdyf.umbraco8.headless.Controllers
                     new NavigationTreeResolverSettings() { Depth = depth, ContentDepth = contentDepth, ContentToIncludeInMetaProperties = includeInMetaParam })
                 })) as IHttpActionResult);
 
+        }
+
+        // Todo - move logic?
+        // Todo - check if caching required?
+        // Todo - check if stack better than recursive?
+        private IPublishedContent GetByRouteAndCulture(string url, IEnumerable<IPublishedContent> nodes = null)
+        {
+            if (nodes == null)
+            {
+                var defaultNode = _context.Content.GetByRoute(url);
+                if (defaultNode != null)
+                    return defaultNode;
+
+                nodes = _context.Content.GetAtRoot();
+            }
+
+            foreach (var node in nodes)
+            {
+                if (CompareUrl(node.Url, url))
+                    return node;
+
+                var variantCulture = node.Cultures.Keys.FirstOrDefault(c => CompareUrl(node.Url(c), url));
+
+                if (variantCulture != null)
+                {
+                    _variationContextAccessor.VariationContext = new VariationContext(variantCulture);
+                    return node;
+                }
+
+                var rec = GetByRouteAndCulture(url, node.Children);
+
+                if (rec != null)
+                    return rec;
+            }
+
+            return null;
+        }
+
+        private bool CompareUrl(string nodeUrl, string url)
+        {
+            return nodeUrl.Equals(url, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
