@@ -40,7 +40,9 @@ namespace kdyf.umbraco8.headless
             container.Register<IContentResolverService<IPublishedContent>, UmbracoContentResolverService>();
             container.Register<INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings>, UmbracoNavigationTreeResolverService>();
 
-            container.RegisterScoped<UmbracoContext>((d) => Umbraco.Web.Composing.Current.UmbracoContext);
+            container.RegisterScoped<UmbracoContext>(d => Umbraco.Web.Composing.Current.UmbracoContext);
+            container.RegisterScoped<IVariationContextAccessor>(d => Umbraco.Web.Composing.Current.VariationContextAccessor);
+
 
             container.RegisterApiControllers(typeof(CmsContentController).Assembly);
             container.EnableWebApi(config);
