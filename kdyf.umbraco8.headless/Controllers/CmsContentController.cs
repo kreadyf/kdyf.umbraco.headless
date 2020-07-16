@@ -88,18 +88,17 @@ namespace kdyf.umbraco8.headless.Controllers
         {
             if (nodes == null)
             {
-                var defaultNode = _context.Content.GetByRoute(url);
+                /*var defaultNode = _context.Content.GetByRoute(url);
                 if (defaultNode != null)
                     return defaultNode;
+                 // will not switch culture if default-route does not use the same culture as default-culture   
+                 */
 
                 nodes = _context.Content.GetAtRoot();
             }
 
             foreach (var node in nodes)
             {
-                if (CompareUrl(node.Url, url))
-                    return node;
-
                 var variantCulture = node.Cultures.Keys.FirstOrDefault(c => CompareUrl(node.Url(c), url));
 
                 if (variantCulture != null)
@@ -107,6 +106,9 @@ namespace kdyf.umbraco8.headless.Controllers
                     _variationContextAccessor.VariationContext = new VariationContext(variantCulture);
                     return node;
                 }
+
+                if (CompareUrl(node.Url, url))
+                    return node;
 
                 var rec = GetByRouteAndCulture(url, node.Children);
 
