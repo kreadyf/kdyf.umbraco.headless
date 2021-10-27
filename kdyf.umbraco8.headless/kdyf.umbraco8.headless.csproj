@@ -258,9 +258,13 @@
     <Compile Include="Interfaces\IContentResolverService.cs" />
     <Compile Include="Interfaces\IMetaPropertyResolverService.cs" />
     <Compile Include="Interfaces\INavigationTreeResolverService.cs" />
+    <Compile Include="Interfaces\IUmbracoHeadlessInterceptor.cs" />
+    <Compile Include="Interfaces\IUmbracoHeadlessInterceptorFactory.cs" />
     <Compile Include="Models\NavigationTreeResolverSettings.cs" />
+    <Compile Include="Models\UmbracoHeadlessMiddlewareOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\UmbracoContentResolverService.cs" />
+    <Compile Include="Services\UmbracoHeadlessInterceptorFactory.cs" />
     <Compile Include="Services\UmbracoMetaPropertyResolverService.cs" />
     <Compile Include="Services\UmbracoNavigationTreeResolverService.cs" />
     <Compile Include="Startup.cs" />

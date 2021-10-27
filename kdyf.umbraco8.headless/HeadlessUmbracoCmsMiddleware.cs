@@ -30,8 +30,13 @@ namespace kdyf.umbraco8.headless
 {
     public static class HeadlessUmbracoCmsMiddleware
     {
-        public static HttpConfiguration UseHeadlessUmbacoCms(this IAppBuilder app)
+        public static HttpConfiguration UseHeadlessUmbacoCms(this IAppBuilder app, Action<UmbracoHeadlessMiddlewareOptions> options = null)
         {
+            UmbracoHeadlessMiddlewareOptions headlessOptions = new UmbracoHeadlessMiddlewareOptions();
+
+            if ( options != null)
+                options(headlessOptions);
+            
             HttpConfiguration config = new HttpConfiguration();
 
             var container = new ServiceContainer();
@@ -39,6 +44,9 @@ namespace kdyf.umbraco8.headless
             container.Register<IMetaPropertyResolverService<IPublishedContent>, UmbracoMetaPropertyResolverService>();
             container.Register<IContentResolverService<IPublishedContent>, UmbracoContentResolverService>();
             container.Register<INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings>, UmbracoNavigationTreeResolverService>();
+
+            container.RegisterSingleton<IUmbracoHeadlessInterceptorFactory>(_ =>
+                new UmbracoHeadlessInterceptorFactory(headlessOptions.Interceptors));
 
             container.RegisterScoped<UmbracoContext>(d => Umbraco.Web.Composing.Current.UmbracoContext);
             container.RegisterScoped<IVariationContextAccessor>(d => Umbraco.Web.Composing.Current.VariationContextAccessor);

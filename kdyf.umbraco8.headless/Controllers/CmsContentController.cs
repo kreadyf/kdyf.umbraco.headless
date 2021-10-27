@@ -34,6 +34,7 @@ namespace kdyf.umbraco8.headless.Controllers
 
         private readonly UmbracoContext _context;
         private readonly IVariationContextAccessor _variationContextAccessor;
+        private readonly IUmbracoHeadlessInterceptorFactory _interceptorFactory;
 
 
         public CmsContentController(
@@ -41,7 +42,8 @@ namespace kdyf.umbraco8.headless.Controllers
             IMetaPropertyResolverService<IPublishedContent> metaPropertyResolverService,
             INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> navigationTreeResolverService,
             UmbracoContext context,
-            IVariationContextAccessor variationContextAccessor
+            IVariationContextAccessor variationContextAccessor,
+            IUmbracoHeadlessInterceptorFactory interceptorFactory
             )
         {
             _metaPropertyResolverService = metaPropertyResolverService;
@@ -49,6 +51,7 @@ namespace kdyf.umbraco8.headless.Controllers
             _navigationTreeResolverService = navigationTreeResolverService;
             _context = context;
             _variationContextAccessor = variationContextAccessor;
+            _interceptorFactory = interceptorFactory;
         }
 
 
@@ -61,23 +64,28 @@ namespace kdyf.umbraco8.headless.Controllers
         /// <param name="includeInMeta">Comma separated list of content aliases which should be included in the meta properties</param>
         [System.Web.Http.Route("{*url}")]
         [System.Web.Http.HttpGet]
-        public Task<IHttpActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
+        public async Task<IHttpActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
         {
             var content = GetByRouteAndCulture($"/{url}");
 
             if (content == null)
-                return Task.FromResult(NotFound() as IHttpActionResult);
+                return NotFound();
+
+            var interceptor = _interceptorFactory.GetInterceptorByDocumentTypeAlias(content.ContentType.Alias);
+
+            if (interceptor != null)
+                return await interceptor.Intercept(content);
 
             string[] includeInMetaParam = string.IsNullOrWhiteSpace(includeInMeta) ? new string[] { } : includeInMeta.Split(',');
 
-            return Task.FromResult(Ok(DynamicObject.Merge(
+            return Ok(DynamicObject.Merge(
                 _metaPropertyResolverService.Resolve(content),
                 _contentResolverService.Resolve(content, null),
                 new
                 {
                     Navigation = _navigationTreeResolverService.Resolve(content,
                     new NavigationTreeResolverSettings() { Depth = depth, ContentDepth = contentDepth, ContentToIncludeInMetaProperties = includeInMetaParam })
-                })) as IHttpActionResult);
+                })) as IHttpActionResult;
 
         }
 
