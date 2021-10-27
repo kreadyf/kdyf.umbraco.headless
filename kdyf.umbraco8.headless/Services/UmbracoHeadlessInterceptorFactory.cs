@@ -19,7 +19,12 @@ namespace kdyf.umbraco8.headless.Services
 
         public IUmbracoHeadlessInterceptor GetInterceptorByDocumentTypeAlias(string documentTypeAlias)
         {
-            throw new NotImplementedException();
+            if (_interceptors.ContainsKey(documentTypeAlias))
+            {
+                return null;
+            }
+
+            return _interceptors[documentTypeAlias];
         }
     }
 }
