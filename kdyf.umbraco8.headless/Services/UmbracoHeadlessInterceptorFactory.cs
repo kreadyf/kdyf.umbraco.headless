@@ -7,7 +7,7 @@ using kdyf.umbraco8.headless.Interfaces;
 
 namespace kdyf.umbraco8.headless.Services
 {
-    public class  UmbracoHeadlessInterceptorFactory : IUmbracoHeadlessInterceptorFactory
+    public class UmbracoHeadlessInterceptorFactory : IUmbracoHeadlessInterceptorFactory
     {
         private readonly Dictionary<string, IUmbracoHeadlessInterceptor> _interceptors;
 
@@ -21,10 +21,10 @@ namespace kdyf.umbraco8.headless.Services
         {
             if (_interceptors.ContainsKey(documentTypeAlias))
             {
-                return null;
+                return _interceptors[documentTypeAlias];
             }
 
-            return _interceptors[documentTypeAlias];
+            return null;
         }
     }
 }
