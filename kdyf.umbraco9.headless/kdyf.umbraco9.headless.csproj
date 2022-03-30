@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <Description>Use the Umbraco CMS v9 without any templates: This library injects a API-REST service which returns content as JSON.</Description>
+    <Copyright>Copyright © 2022</Copyright>
+    <PackageProjectUrl>www.kreadyf.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kreadyf/kdyf.umbraco.headless</RepositoryUrl>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
