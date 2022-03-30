@@ -6,8 +6,9 @@
     <Copyright>Copyright © 2022</Copyright>
     <PackageProjectUrl>www.kreadyf.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kreadyf/kdyf.umbraco.headless</RepositoryUrl>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
