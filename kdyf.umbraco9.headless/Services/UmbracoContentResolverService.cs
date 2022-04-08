@@ -64,7 +64,7 @@ namespace kdyf.umbraco9.headless.Services
                 {
                     try
                     {
-                        var ci = new CultureInfo(alias).ToString();                        
+                        var ci = new CultureInfo(alias).ToString();
                         langDic.Add(alias, content.Url(ci));
                     }
                     catch (Exception ex)
@@ -79,6 +79,22 @@ namespace kdyf.umbraco9.headless.Services
             return res.ToDynamicObject();
         }
 
+        private dynamic ResolveLink(Umbraco.Cms.Core.Models.Link content, string[] aliases)
+        {
+            return null;
+        }
+        private dynamic ResolveItemFromList(IPublishedElement content, string[] aliases)
+        {
+            var res = content.Properties
+                .Where(s => aliases == null || aliases.Contains(s.PropertyType.Alias, propertyNameComparer))
+                .ToDictionary(
+                    k => k.PropertyType.Alias,
+                    v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias));
+
+            res.Add("ContentType", content.ContentType.Alias);
+
+            return res.ToDynamicObject();
+        }
         private dynamic Resolve(IPublishedElement content, string[] aliases)
         {
             var res = content.Properties
@@ -88,6 +104,17 @@ namespace kdyf.umbraco9.headless.Services
                     v => ResolveProperty(content.Value<dynamic>(v.PropertyType.Alias), v.PropertyType.Alias));
 
             return res.ToDynamicObject();
+        }
+
+        private static List<dynamic> ResolveLinks(dynamic propertyValue)
+        {
+            var linkList = new List<dynamic>();
+            foreach (var item in (propertyValue as IEnumerable<Umbraco.Cms.Core.Models.Link>))
+            {
+                linkList.Add(new { item.Name, item.Type, item.Url });
+            }
+
+            return linkList;
         }
 
         private dynamic Resolve(IPublishedContent content)
@@ -163,8 +190,12 @@ namespace kdyf.umbraco9.headless.Services
                 return Resolve(propertyValue as IPublishedElement, null);
 
             if (IsOfAnyType(GetEnumerableUnderlyingType(type), typeof(IPublishedElement)))
-                return (propertyValue as IEnumerable<IPublishedElement>).Select(s => Resolve(s, null));
+                return (propertyValue as IEnumerable<IPublishedElement>).Select(s => ResolveItemFromList(s, null));
 
+            if (IsOfAnyType(GetEnumerableUnderlyingType(type), typeof(Umbraco.Cms.Core.Models.Link)))
+            {
+                return ResolveLinks(propertyValue);
+            }
 
             var collection = GetEnumerableUnderlyingType(type)?.GetInterfaces()?.Select(s => s.Name);
 
