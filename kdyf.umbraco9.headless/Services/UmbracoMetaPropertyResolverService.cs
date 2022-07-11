@@ -18,7 +18,8 @@ namespace kdyf.umbraco9.headless.Services
                 ? slug.GenerateSlug(content.Name)
                 : content.UrlName;*/
 
-            string urlName = slug.GenerateSlug(content.Name ?? string.Empty);
+            string urlName = slug.GenerateSlug(content.Name ?? string.Empty)
+                .Replace(".", string.Empty);
 
             string url = string.IsNullOrWhiteSpace(content.Url()) || content.Url() == "#"
                 ? $"#{content.Parent?.Url()}{urlName}"
