@@ -92,7 +92,8 @@ namespace kdyf.umbraco9.headless.Controllers
 
         private string fixUrl(string url)
         {
-            string result = url;
+            string result = url ?? "/";
+
             if (!result.StartsWith("/"))
             {
                 result = "/" + result;
