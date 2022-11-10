@@ -25,7 +25,7 @@ namespace kdyf.umbraco9.headless.Services
                 ? $"#{content.Parent?.Url()}{urlName}"
                 : content.Url();
 
-            return new { Url = url, UrlName = urlName, content.Name, ContentType = content.ContentType.Alias, content.CreateDate, IsVisible = content.IsVisible() };
+            return new { Url = url, UrlName = urlName, content.Name, ContentType = content.ContentType.Alias, content.CreateDate, content.UpdateDate, IsVisible = content.IsVisible() };
         }
 
     }
