@@ -56,7 +56,7 @@ namespace kdyf.umbraco9.headless.Services
             //if (allCultures.Count() > 1 && !string.IsNullOrEmpty(allCultures.FirstOrDefault()))
             //    res.Add("Languages", allCultures.ToDictionary(k => k, v => content.Url(v.FixCulture())));
 
-            if (allCultures.Count() > 1 && !string.IsNullOrEmpty(allCultures.FirstOrDefault()))
+            if (allCultures.Count() > 0 && !string.IsNullOrEmpty(allCultures.FirstOrDefault()))
             {
                 var langDic = new Dictionary<string, string>();
 
