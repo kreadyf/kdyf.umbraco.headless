@@ -3,24 +3,32 @@ using kdyf.umbraco9.headless.Extensions;
 using kdyf.umbraco9.headless.Helper;
 using kdyf.umbraco9.headless.Interfaces;
 using kdyf.umbraco9.headless.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Web.Common.Controllers;
 using Umbraco.Cms.Web.Common.UmbracoContext;
 using Umbraco.Extensions;
+using kdyf.umbraco9.headless.Constants;
 
 namespace kdyf.umbraco9.headless.Controllers
 {
-    
+
     [Route("")]
     public class CmsContentController : UmbracoApiController
     {
@@ -33,13 +41,19 @@ namespace kdyf.umbraco9.headless.Controllers
 
         private readonly IUmbracoHeadlessInterceptorFactory _interceptorFactory;
 
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemberGroupService _memberGroupService;
+        private readonly IMemoryCache _memoryCache;
+
         public CmsContentController(IUmbracoContextAccessor umbracoContextAccessor,
             IVariationContextAccessor variationContextAccessor,
             IMetaPropertyResolverService<IPublishedContent> metaPropertyResolverService,
             IContentResolverService<IPublishedContent> contentResolverService,
             INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> navigationTreeResolverService,
-            IUmbracoHeadlessInterceptorFactory interceptorFactory
-            )
+            IUmbracoHeadlessInterceptorFactory interceptorFactory,
+            IHttpContextAccessor httpContextAccessor,
+            IMemberGroupService memberGroupService,
+            IMemoryCache memoryCache)
         {
             _umbracoContextAccessor = umbracoContextAccessor;
             _variationContextAccessor = variationContextAccessor;
@@ -49,6 +63,10 @@ namespace kdyf.umbraco9.headless.Controllers
             _navigationTreeResolverService = navigationTreeResolverService;
 
             _interceptorFactory = interceptorFactory;
+
+            _httpContextAccessor = httpContextAccessor;
+            _memberGroupService = memberGroupService;
+            _memoryCache = memoryCache;
         }
 
         /// <summary>Get a content node</summary>
@@ -62,9 +80,34 @@ namespace kdyf.umbraco9.headless.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
         {
-            
+            #region Security
+            var claimsIdentity = _httpContextAccessor.HttpContext.User.Identities.FirstOrDefault();
+            var permissionGroupsInClaim = claimsIdentity.Claims
+                .Where(n => n.Type.Equals(PropertyContants.PermissionGroup, StringComparison.InvariantCultureIgnoreCase))
+                .Select(n => n.Value.ToUpper())
+                .ToHashSet();
+
+            var isAuthenticated = claimsIdentity.Claims.Any();
+            var permissionGroups = _memoryCache.GetOrCreate("PermissionGroups", entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+
+                var memberGroups = _memberGroupService.GetAll().ToDictionary(k => k.Id, v => v.Key);
+
+                return memberGroups; 
+            });
+            #endregion
+
+            var authValidation = new SecurityValidationSettings()
+            {
+                PermissionGroups = permissionGroups,
+                IsAuthenticated = isAuthenticated,
+                PermissionInClaim = permissionGroupsInClaim,
+                ContentResolver = _contentResolverService
+            };
+
             var urlFixed = fixUrl(url);
-            var content = GetByRouteAndCulture(urlFixed);
+            var content = GetByRouteAndCulture(urlFixed).ValidateMemberGroups(authValidation);
 
             if (content == null)
                 return NotFound();
@@ -81,7 +124,8 @@ namespace kdyf.umbraco9.headless.Controllers
             var navigation = new
             {
                 Navigation = _navigationTreeResolverService.Resolve(content,
-                    new NavigationTreeResolverSettings() { Depth = depth, ContentDepth = contentDepth, ContentToIncludeInMetaProperties = includeInMetaParam })
+                    new NavigationTreeResolverSettings() { Depth = depth, ContentDepth = contentDepth, ContentToIncludeInMetaProperties = includeInMetaParam },
+                    authValidation)
             };
 
             return Ok(DynamicObject.Merge(
@@ -158,7 +202,7 @@ namespace kdyf.umbraco9.headless.Controllers
                 {
                     Debug.WriteLine(ex.Message);
                 }
-                
+
 
                 var rec = GetByRouteAndCulture(url, node.Children);
 
