@@ -35,11 +35,28 @@ namespace kdyf.umbraco9.headless.Extensions
                 if (propertyType == PropertyContants.PermissionGroups && !String.IsNullOrEmpty(propertyValue.ToString()))
                 {
                     if (propertyValue == null) break; else requiresGroup = true;
-                    if (settings.PermissionGroups.TryGetValue(Convert.ToInt32(propertyValue), out var memberGroupGuid))
+
+                    var ids = (propertyValue.ToString()).Split(',');
+                    foreach (var id in ids)
                     {
-                        userInGroup = settings.PermissionInClaim.Contains(memberGroupGuid.ToString().ToUpper());
+                        if (Int32.TryParse(id, out var idInt))
+                        {
+                            if (settings.PermissionGroups.TryGetValue(idInt, out var memberGroupGuid))
+                            {
+                                userInGroup = settings.PermissionInClaim.Contains(memberGroupGuid.ToString().ToUpper());
+                                if (!userInGroup) break;
+                            }
+                        }
+                        else
+                        {
+                            userInGroup = false;
+                            break;
+                        }
                     }
-                } else if (propertyType == PropertyContants.RequiresAuthentication)
+
+
+                }
+                else if (propertyType == PropertyContants.RequiresAuthentication)
                     requiresAuthentication = (bool)propertyValue;
             }
 
