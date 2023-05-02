@@ -22,7 +22,6 @@ namespace kdyf.umbraco9.headless.Extensions
 
             var properties = settings.ContentResolver.Resolve(content, new string[] { PropertyContants.PermissionGroups, PropertyContants.RequiresAuthentication });
 
-            bool requiresAuthentication = false;
             bool requiresGroup = false;
             bool userInGroup = false;
 
@@ -44,25 +43,16 @@ namespace kdyf.umbraco9.headless.Extensions
                             if (settings.PermissionGroups.TryGetValue(idInt, out var memberGroupGuid))
                             {
                                 userInGroup = settings.PermissionInClaim.Contains(memberGroupGuid.ToString().ToUpper());
-                                if (!userInGroup) break;
+                                if (userInGroup) break;
                             }
-                        }
-                        else
-                        {
-                            userInGroup = false;
-                            break;
                         }
                     }
 
 
                 }
-                else if (propertyType == PropertyContants.RequiresAuthentication)
-                    requiresAuthentication = (bool)propertyValue;
             }
 
-            if ((requiresGroup && userInGroup)
-                || (!requiresGroup && !requiresAuthentication)
-                || (!requiresGroup && requiresAuthentication && settings.IsAuthenticated))
+            if ((requiresGroup && userInGroup) || !requiresGroup)
                 result = content;
 
             return result;
