@@ -20,7 +20,7 @@ namespace kdyf.umbraco9.headless.Extensions
 
             IPublishedContent result = null;
 
-            var properties = settings.ContentResolver.Resolve(content, new string[] { PropertyContants.PermissionGroups, PropertyContants.RequiresAuthentication });
+            var properties = settings.ContentResolver.Resolve(content, new string[] { PropertyConstants.PermissionGroups });
 
             bool requiresGroup = false;
             bool userInGroup = false;
@@ -31,7 +31,7 @@ namespace kdyf.umbraco9.headless.Extensions
                 string propertyType = item.Key.ToLower();
                 object propertyValue = item.Value;
 
-                if (propertyType == PropertyContants.PermissionGroups && !String.IsNullOrEmpty(propertyValue.ToString()))
+                if (propertyType == PropertyConstants.PermissionGroups && !String.IsNullOrEmpty(propertyValue.ToString()))
                 {
                     if (propertyValue == null) break; else requiresGroup = true;
 

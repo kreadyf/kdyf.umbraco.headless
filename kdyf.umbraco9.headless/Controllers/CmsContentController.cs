@@ -37,26 +37,26 @@ namespace kdyf.umbraco9.headless.Controllers
         private readonly INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> _navigationTreeResolverService;
 
         private readonly IUmbracoContextAccessor _umbracoContextAccessor;
-        private readonly IVariationContextAccessor _variationContextAccessor;
 
         private readonly IUmbracoHeadlessInterceptorFactory _interceptorFactory;
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemberGroupService _memberGroupService;
         private readonly IMemoryCache _memoryCache;
+        readonly IServiceProvider _serviceProvider;
 
         public CmsContentController(IUmbracoContextAccessor umbracoContextAccessor,
-            IVariationContextAccessor variationContextAccessor,
             IMetaPropertyResolverService<IPublishedContent> metaPropertyResolverService,
             IContentResolverService<IPublishedContent> contentResolverService,
             INavigationTreeResolverService<IPublishedContent, NavigationTreeResolverSettings> navigationTreeResolverService,
             IUmbracoHeadlessInterceptorFactory interceptorFactory,
             IHttpContextAccessor httpContextAccessor,
             IMemberGroupService memberGroupService,
-            IMemoryCache memoryCache)
+            IMemoryCache memoryCache,
+            IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             _umbracoContextAccessor = umbracoContextAccessor;
-            _variationContextAccessor = variationContextAccessor;
 
             _metaPropertyResolverService = metaPropertyResolverService;
             _contentResolverService = contentResolverService;
@@ -80,10 +80,9 @@ namespace kdyf.umbraco9.headless.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string url = "", int depth = 0, int contentDepth = 1, string includeInMeta = null)
         {
-            #region Security
             var claimsIdentity = _httpContextAccessor.HttpContext.User.Identities.FirstOrDefault();
             var permissionGroupsInClaim = claimsIdentity.Claims
-                .Where(n => n.Type.Equals(PropertyContants.PermissionGroup, StringComparison.InvariantCultureIgnoreCase))
+                .Where(n => n.Type.Equals(PropertyConstants.PermissionGroup, StringComparison.InvariantCultureIgnoreCase))
                 .Select(n => n.Value.ToUpper())
                 .ToHashSet();
 
@@ -96,7 +95,6 @@ namespace kdyf.umbraco9.headless.Controllers
 
                 return memberGroups; 
             });
-            #endregion
 
             var authValidation = new SecurityValidationSettings()
             {
@@ -106,8 +104,7 @@ namespace kdyf.umbraco9.headless.Controllers
                 ContentResolver = _contentResolverService
             };
 
-            var urlFixed = fixUrl(url);
-            var content = GetByRouteAndCulture(urlFixed).ValidateMemberGroups(authValidation);
+            var content = _serviceProvider.GetPublishedContentByRoute(url).ValidateMemberGroups(authValidation);
 
             if (content == null)
                 return NotFound();
@@ -150,76 +147,5 @@ namespace kdyf.umbraco9.headless.Controllers
 
             return result;
         }
-
-        private IPublishedContent GetByRouteAndCulture(string url, IEnumerable<IPublishedContent> nodes = null)
-        {
-            if (nodes == null)
-            {
-                /*var defaultNode = _context.Content.GetByRoute(url);
-                if (defaultNode != null)
-                    return defaultNode;
-                 // will not switch culture if default-route does not use the same culture as default-culture   
-                 */
-                var umbracoContext = _umbracoContextAccessor.GetRequiredUmbracoContext();
-
-                nodes = umbracoContext.Content.GetAtRoot();
-            }
-
-            foreach (var node in nodes)
-            {
-                //var variantCulture = node.Cultures.Keys.FirstOrDefault(c => CompareUrl(node.Url(c.FixCulture()), url));
-
-                foreach (var item in node.Cultures.Keys)
-                {
-                    try
-                    {
-                        var ci = new CultureInfo(item).ToString();
-                        var tmpUrl = node.Url(ci);
-                        if (CompareUrl(tmpUrl, url))
-                        {
-                            _variationContextAccessor.VariationContext = new VariationContext(ci);
-                            return node;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
-                }
-
-                //if (variantCulture != null)
-                //{
-                //    _variationContextAccessor.VariationContext = new VariationContext(variantCulture.FixCulture());
-                //    return node;
-                //}
-
-                try
-                {
-                    if (CompareUrl(node.Url(), url))
-                        return node;
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                }
-
-
-                var rec = GetByRouteAndCulture(url, node.Children);
-
-                if (rec != null)
-                    return rec;
-            }
-
-            return null;
-        }
-
-        private bool CompareUrl(string nodeUrl, string url)
-        {
-            return nodeUrl.Replace("#", string.Empty).Equals(url, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-
     }
-
-
 }
