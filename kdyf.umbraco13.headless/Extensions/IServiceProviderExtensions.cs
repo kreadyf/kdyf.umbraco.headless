@@ -24,21 +24,7 @@ namespace kdyf.umbraco9.headless.Extensions
             if (variationContext == null)
                 return null;
 
-            // Check if streamlineCultureRouting is enabled
-            var configuration = @this.GetService<IConfiguration>();
-            var streamlineCultureRouting = configuration?.GetValue<bool>("Headless:StreamlineCultureRouting") ?? false;
-
-            if (streamlineCultureRouting)
-            {
-                var siteCultureResolver = @this.GetService<ISiteCultureResolver>();
-                if (siteCultureResolver != null)
-                {
-                    return siteCultureResolver.ResolveContent(url, variationContext);
-                }
-                // Fallback to original if resolver not registered
-            }
-
-            // Original behavior (fallback)
+            // Original Umbraco behavior - try first
             if (url == null)
                 url = "/";
 
@@ -53,7 +39,26 @@ namespace kdyf.umbraco9.headless.Extensions
 
             var distinctNodes = nodes.GroupBy(n => n.Id).Select(g => g.First()).ToList();
 
-            return FindNodeByUrl(distinctNodes, url, variationContext);
+            var content = FindNodeByUrl(distinctNodes, url, variationContext);
+            
+            // If original routing found content, return it
+            if (content != null)
+                return content;
+
+            // Original routing returned null/404 - try streamlined culture routing as fallback
+            var configuration = @this.GetService<IConfiguration>();
+            var streamlineCultureRouting = configuration?.GetValue<bool>("Headless:StreamlineCultureRouting") ?? false;
+
+            if (streamlineCultureRouting)
+            {
+                var siteCultureResolver = @this.GetService<ISiteCultureResolver>();
+                if (siteCultureResolver != null)
+                {
+                    return siteCultureResolver.ResolveContent(url, variationContext);
+                }
+            }
+
+            return null;
         }
 
         private static IPublishedContent FindNodeByUrl(IEnumerable<IPublishedContent> nodes, string url, IVariationContextAccessor variationContext)
