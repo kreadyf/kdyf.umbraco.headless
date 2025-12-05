@@ -111,7 +111,7 @@ namespace kdyf.umbraco9.headless.Services
             var linkList = new List<dynamic>();
             foreach (var item in (propertyValue as IEnumerable<Umbraco.Cms.Core.Models.Link>))
             {
-                linkList.Add(new { item.Name, item.Type, item.Url });
+                linkList.Add(new { item.Name, item.Type, item.Url, item.Target });
             }
 
             return linkList;
