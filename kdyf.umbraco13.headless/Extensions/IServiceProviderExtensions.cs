@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using kdyf.umbraco13.headless.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -14,7 +14,7 @@ namespace kdyf.umbraco9.headless.Extensions
 {
     public static class IServiceProviderExtensions
     {
-        public static IPublishedContent GetPublishedContentByRoute(this IServiceProvider @this, string? url, IEnumerable<IPublishedContent> nodes = null)
+        public static IPublishedContent GetPublishedContentByRoute(this IServiceProvider @this, string url, IEnumerable<IPublishedContent> nodes = null)
         {
             IUmbracoContext umbracoContext = null;
             if (!@this.GetService<IUmbracoContextAccessor>()?.TryGetUmbracoContext(out umbracoContext) ?? false)
@@ -24,13 +24,28 @@ namespace kdyf.umbraco9.headless.Extensions
             if (variationContext == null)
                 return null;
 
+            // Check if streamlineCultureRouting is enabled
+            var configuration = @this.GetService<IConfiguration>();
+            var streamlineCultureRouting = configuration?.GetValue<bool>("Headless:StreamlineCultureRouting") ?? false;
+
+            if (streamlineCultureRouting)
+            {
+                var siteCultureResolver = @this.GetService<ISiteCultureResolver>();
+                if (siteCultureResolver != null)
+                {
+                    return siteCultureResolver.ResolveContent(url, variationContext);
+                }
+                // Fallback to original if resolver not registered
+            }
+
+            // Original behavior (fallback)
             if (url == null)
                 url = "/";
 
             if (!url.EndsWith('/'))
                 url = $"{url}/";
 
-            if (!url.StartsWith('/'))
+            if (!url.StartsWith("/"))
                 url = $"/{url}";
 
             if (nodes == null)
@@ -51,7 +66,6 @@ namespace kdyf.umbraco9.headless.Extensions
             for (int i = 0; i < nodesList.Count; i++)
             {
                 var node = nodesList[i];
-                var isLgt = node.Name == "lgt";
                 foreach (var item in node.Cultures.Keys)
                 {
                     try
@@ -97,6 +111,5 @@ namespace kdyf.umbraco9.headless.Extensions
         {
             return nodeUrl.Replace("#", string.Empty).Equals(url, StringComparison.InvariantCultureIgnoreCase);
         }
-
     }
 }
