@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PropertyEditors.ValueConverters;
 using Umbraco.Cms.Core.Web;
@@ -117,6 +118,16 @@ namespace kdyf.umbraco9.headless.Services
             return linkList;
         }
 
+        private static List<dynamic> ResolveLink(dynamic propertyValue)
+        {
+            var linkList = new List<dynamic>();
+            var item = propertyValue as Umbraco.Cms.Core.Models.Link;
+
+            linkList.Add(new { item.Name, item.Type, item.Url, item.Target });
+
+            return linkList;
+        }
+
         private dynamic Resolve(IPublishedContent content)
         {
             if (content == null)
@@ -195,6 +206,18 @@ namespace kdyf.umbraco9.headless.Services
             if (IsOfAnyType(GetEnumerableUnderlyingType(type), typeof(Umbraco.Cms.Core.Models.Link)))
             {
                 return ResolveLinks(propertyValue);
+            }
+
+            if (IsOfAnyType(type, typeof(Umbraco.Cms.Core.Models.Link)))
+            {
+                return ResolveLink(propertyValue);
+            }
+
+            if (IsOfAnyType(type, typeof(Umbraco.Cms.Core.Models.Blocks.BlockListModel)))
+            {
+                return (propertyValue as IEnumerable<BlockListItem>)
+                    .Where(n => IsOfAnyType(n.Content.GetType(), typeof(IPublishedElement)))
+                    .Select(n => ResolveItemFromList(n.Content, null));
             }
 
             var collection = GetEnumerableUnderlyingType(type)?.GetInterfaces()?.Select(s => s.Name);
