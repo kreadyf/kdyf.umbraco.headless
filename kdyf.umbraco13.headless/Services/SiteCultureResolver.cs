@@ -114,7 +114,10 @@ namespace kdyf.umbraco13.headless.Services
         /// </summary>
         private (IPublishedContent rootNode, string relativePath) FindRootNode(List<IPublishedContent> rootNodes, string urlPath)
         {
-            // Try domain matching first
+            IPublishedContent rootDomainNode = null;
+
+            // First pass: Try specific domain matching (excluding root "/" domain)
+            // This ensures paths like "/spain/news" match "/spain/" domain, not "/" domain
             foreach (var node in rootNodes)
             {
                 foreach (var domain in _domainService.GetAssignedDomains(node.Id, false))
@@ -122,19 +125,38 @@ namespace kdyf.umbraco13.headless.Services
                     if (string.IsNullOrEmpty(domain.DomainName))
                         continue;
 
-                    if (domain.DomainName == "/" && string.IsNullOrEmpty(urlPath))
-                        return (node, string.Empty);
+                    // Skip root domain "/" in first pass - check it later as fallback
+                    if (domain.DomainName == "/")
+                    {
+                        // Store first root domain node found (typically only one exists)
+                        if (rootDomainNode == null)
+                            rootDomainNode = node;
+                        continue;
+                    }
 
                     var domainPath = ExtractDomainPath(domain.DomainName);
                     if (string.IsNullOrEmpty(domainPath))
                         continue;
 
+                    // Exact match: URL path equals domain path
                     if (urlPath == domainPath)
                         return (node, string.Empty);
                     
+                    // Prefix match: URL path starts with domain path + "/"
                     if (!string.IsNullOrEmpty(urlPath) && urlPath.StartsWith(domainPath + "/", StringComparison.OrdinalIgnoreCase))
                         return (node, urlPath.Substring(domainPath.Length + 1));
                 }
+            }
+
+            // Second pass: Check root domain "/" only if no specific domain matched
+            // Root domain is the fallback for paths that don't match any specific domain
+            if (rootDomainNode != null)
+            {
+                // Empty path: return root node
+                if (string.IsNullOrEmpty(urlPath))
+                    return (rootDomainNode, string.Empty);
+                // Non-empty path: treat entire path as relative path under root domain
+                return (rootDomainNode, urlPath);
             }
 
             // Fallback: match by node name
@@ -145,6 +167,10 @@ namespace kdyf.umbraco13.headless.Services
                 if (rootNode != null)
                     return (rootNode, string.Join("/", segments.Skip(1)));
             }
+
+            // Final fallback: if root URL "/" and no domain matched, return first root node
+            if (string.IsNullOrEmpty(urlPath) && rootNodes.Count > 0)
+                return (rootNodes.First(), string.Empty);
 
             return (null, null);
         }

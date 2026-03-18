@@ -4,7 +4,6 @@ using kdyf.umbraco9.headless.Extensions;
 using kdyf.umbraco9.headless.Helper;
 using kdyf.umbraco9.headless.Interfaces;
 using Microsoft.AspNetCore.Html;
-using NPoco.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +16,6 @@ using Umbraco.Cms.Core.PropertyEditors.ValueConverters;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Web.Common.UmbracoContext;
 using Umbraco.Extensions;
-using static Umbraco.Cms.Core.Constants.HttpContext;
 
 namespace kdyf.umbraco9.headless.Services
 {
@@ -218,7 +216,7 @@ namespace kdyf.umbraco9.headless.Services
             if (IsOfAnyType(type, typeof(Umbraco.Cms.Core.Models.Blocks.BlockListModel)))
             {
                 return (propertyValue as IEnumerable<BlockListItem>)
-                    .Where(n=> IsOfAnyType(n.Content.GetType(), typeof(IPublishedElement)))
+                    .Where(n => IsOfAnyType(n.Content.GetType(), typeof(IPublishedElement)))
                     .Select(n => ResolveItemFromList(n.Content, null));
             }
 
