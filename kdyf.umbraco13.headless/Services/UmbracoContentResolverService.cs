@@ -66,7 +66,10 @@ namespace kdyf.umbraco9.headless.Services
                     try
                     {
                         var ci = new CultureInfo(alias).ToString();
-                        langDic.Add(alias, content.Url(ci));
+                        // Umbraco 13's content.Cultures.Keys come back lowercase (e.g. "en-us"); Umbraco 14 preserves
+                        // the exact casing configured in umbracoLanguage.languageISOCode (e.g. "en-US"). Normalize so
+                        // the "Languages" dictionary keys stay stable across Umbraco versions for existing consumers.
+                        langDic.Add(alias.ToLowerInvariant(), content.Url(ci));
                     }
                     catch (Exception ex)
                     {
