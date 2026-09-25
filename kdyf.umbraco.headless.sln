@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kdyf.umbraco11.headless", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kdyf.umbraco13.headless", "kdyf.umbraco13.headless\kdyf.umbraco13.headless.csproj", "{38EC9B7C-266A-B479-8168-749878CC2B6B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kdyf.umbraco14.headless", "kdyf.umbraco14.headless\kdyf.umbraco14.headless.csproj", "{4C411C1D-4420-4216-B5BB-6527B075BDB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{38EC9B7C-266A-B479-8168-749878CC2B6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38EC9B7C-266A-B479-8168-749878CC2B6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38EC9B7C-266A-B479-8168-749878CC2B6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C411C1D-4420-4216-B5BB-6527B075BDB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C411C1D-4420-4216-B5BB-6527B075BDB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C411C1D-4420-4216-B5BB-6527B075BDB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C411C1D-4420-4216-B5BB-6527B075BDB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
